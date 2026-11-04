@@ -1,7 +1,17 @@
 # External package sources added to the SDK as feeds before building.
-# UNVERIFIED: check the repo URLs and package layout before the first CI run.
+#
+#   name     feed name (packages in config.yml reference it with `feed:`)
+#   git      repository URL
+#   enabled  optional, default true. A disabled feed is not fetched, its setup is skipped,
+#            and its packages are neither built nor listed on the site.
+#   setup    optional script, run as `sh <setup> <sdk_dir>` from the repo root after the feed is installed
+#
 feeds:
   - name: amneziawg
+    enabled: true
     git: https://github.com/amnezia-vpn/amneziawg-openwrt.git
+    setup: scripts/feeds/amneziawg.sh
+
   - name: zapret
+    enabled: true
     git: https://github.com/remittor/zapret-openwrt.git

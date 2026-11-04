@@ -17,6 +17,10 @@ function load() {
     .map((f) => yaml.load(fs.readFileSync(path.join(dir, f), "utf8")));
   const baseUrl = cfg.base_url.replace(/\/$/, "");
   const versions = (process.env.VERSIONS || cfg.openwrt_version).split(",").filter(Boolean);
+  // Packages of disabled feeds (feeds.yml) are not built, so they are not listed either.
+  const feeds = yaml.load(fs.readFileSync(path.join(root, "feeds.yml"), "utf8")).feeds;
+  const enabled = new Set(feeds.filter((f) => f.enabled !== false).map((f) => f.name));
+  cfg.packages = cfg.packages.filter((p) => !p.feed || enabled.has(p.feed));
   return { cfg, devices, baseUrl, versions };
 }
 
