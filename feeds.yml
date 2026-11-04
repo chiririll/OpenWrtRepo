@@ -1,0 +1,7 @@
+# External package sources added to the SDK as feeds before building.
+# UNVERIFIED: check the repo URLs and package layout before the first CI run.
+feeds:
+  - name: amneziawg
+    git: https://github.com/amnezia-vpn/amneziawg-openwrt.git
+  - name: zapret
+    git: https://github.com/remittor/zapret-openwrt.git

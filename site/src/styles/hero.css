@@ -1,0 +1,80 @@
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+}
+
+nav .logo {
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+nav .logo span {
+  color: var(--accent);
+}
+
+nav a.link {
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 20px;
+  font-size: 14px;
+}
+
+nav a.link:hover {
+  color: var(--text);
+}
+
+.hero {
+  text-align: center;
+  padding: 72px 0 56px;
+  position: relative;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -80px 0 auto;
+  height: 420px;
+  z-index: -1;
+  background: radial-gradient(60% 60% at 50% 0, color-mix(in srgb, var(--accent2) 28%, transparent), transparent 70%),
+    radial-gradient(40% 50% at 80% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%);
+}
+
+.hero h1 {
+  font-size: clamp(34px, 6vw, 60px);
+  line-height: 1.1;
+  margin: 0 0 16px;
+  letter-spacing: -.02em;
+}
+
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 19px;
+  max-width: 620px;
+  margin: 0 auto 28px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  background: var(--bg2);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--muted);
+}

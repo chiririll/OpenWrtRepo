@@ -1,0 +1,7 @@
+name: Xiaomi Mi Router AX3000T
+vendor: Xiaomi
+target: mediatek
+subtarget: filogic
+arch: aarch64_cortex-a53
+profile: xiaomi_mi-router-ax3000t
+extra_packages: []

@@ -1,0 +1,86 @@
+.steps {
+  counter-reset: s;
+  display: grid;
+  gap: 16px;
+}
+
+.step {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 22px 20px 64px;
+  position: relative;
+}
+
+.step::before {
+  counter-increment: s;
+  content: counter(s);
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #06101a;
+}
+
+.step h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.step p {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+
+.step p:last-child {
+  margin-bottom: 0;
+}
+
+.term {
+  position: relative;
+  background: var(--code);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.term pre {
+  margin: 0;
+  padding: 14px 84px 14px 16px;
+  overflow-x: auto;
+  color: #d6e2f5;
+  font-size: 14px;
+}
+
+.term button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.term button:hover {
+  border-color: var(--accent);
+}
+
+details {
+  margin-top: 12px;
+}
+
+summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14px;
+}

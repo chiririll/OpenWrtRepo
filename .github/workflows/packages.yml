@@ -1,0 +1,171 @@
+name: packages
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["*.md"]
+  workflow_dispatch:
+
+concurrency:
+  group: packages
+  cancel-in-progress: false
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: echo "matrix=$(python3 scripts/matrix.py)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+    env:
+      VERSION: ${{ matrix.version }}
+      TARGET: ${{ matrix.target }}
+      SUBTARGET: ${{ matrix.subtarget }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gettext git \
+            libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget zstd
+
+      - name: Prepare signing key
+        env:
+          APK_SIGNING_KEY: ${{ secrets.APK_SIGNING_KEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$APK_SIGNING_KEY" > "$RUNNER_TEMP/sign.pem"
+          openssl ec -in "$RUNNER_TEMP/sign.pem" -pubout -out "$RUNNER_TEMP/public.pem"
+
+      - name: Download SDK
+        run: |
+          base=$(python3 -c "import yaml;print(yaml.safe_load(open('config.yml'))['sdk_base'])")
+          url="$base/$VERSION/targets/$TARGET/$SUBTARGET"
+          file=$(wget -qO- "$url/sha256sums" | awk '{print $2}' | tr -d '*' | grep -E '^openwrt-sdk-.*\.tar\.(zst|xz)$' | head -n1)
+          [ -n "$file" ] || { echo "SDK not found at $url" >&2; exit 1; }
+          wget -q "$url/$file"
+          mkdir sdk
+          tar -xf "$file" -C sdk --strip-components=1
+
+      - name: Configure feeds
+        run: |
+          cd sdk
+          cp feeds.conf.default feeds.conf
+          # Local feed only if it holds packages (the directory is empty apart from .gitkeep for now).
+          if [ -n "$(ls -A "$GITHUB_WORKSPACE/packages" | grep -v '^\.gitkeep$')" ]; then
+            echo "src-link local $GITHUB_WORKSPACE/packages" >> feeds.conf
+          fi
+          python3 - <<'EOF' >> feeds.conf
+          import yaml
+          for f in yaml.safe_load(open("../feeds.yml"))["feeds"]:
+              print(f"src-git {f['name']} {f['git']}")
+          EOF
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Build packages
+        run: |
+          cd sdk
+          python3 - <<'EOF' > .config
+          import yaml
+          for p in yaml.safe_load(open("../config.yml"))["packages"]:
+              print(f"CONFIG_PACKAGE_{p['name']}=m")
+          EOF
+          make defconfig
+          make -j"$(nproc)" package/compile V=s || make -j1 package/compile V=s
+
+      - name: Collect, index and sign
+        run: |
+          apk="$PWD/sdk/staging_dir/host/bin/apk"
+          out="out/$VERSION"
+          mkdir -p "$out/packages/$ARCH" "$out/targets/$TARGET/$SUBTARGET/packages"
+          find sdk/bin/packages -name '*.apk' ! -name 'kmod-*' -exec cp {} "$out/packages/$ARCH/" \;
+          find sdk/bin -name 'kmod-*.apk' -exec cp {} "$out/targets/$TARGET/$SUBTARGET/packages/" \;
+          for d in "$out/packages/$ARCH" "$out/targets/$TARGET/$SUBTARGET/packages"; do
+            ls "$d"/*.apk >/dev/null 2>&1 || { echo "no packages in $d" >&2; continue; }
+            sh scripts/index-and-sign.sh "$d" "$RUNNER_TEMP/sign.pem" "$apk"
+          done
+          rm -f "$RUNNER_TEMP/sign.pem"
+          cp "$RUNNER_TEMP/public.pem" out/public.pem
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repo-${{ matrix.target }}-${{ matrix.subtarget }}
+          path: out
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+
+      - name: Check out gh-pages
+        run: |
+          url="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          if ! git clone -q --depth 1 -b gh-pages "$url" pages 2>/dev/null; then
+            git init -q -b gh-pages pages
+            git -C pages remote add origin "$url"
+          fi
+
+      - name: Replace the rebuilt versions only
+        run: |
+          name=$(python3 -c "import yaml;print(yaml.safe_load(open('config.yml'))['repo_name'])")
+          mkdir -p pages/keys
+          for part in parts/*/; do
+            cp "$part/public.pem" "pages/keys/$name.pem"
+            for v in "$part"[0-9]*/; do
+              rm -rf "pages/$(basename "$v")"   # other versions stay untouched
+            done
+          done
+          # An arch directory is built identically by every target sharing it, so the first one wins.
+          for part in parts/*/; do
+            for dir in "$part"*/packages/* "$part"*/targets/*/*/packages; do
+              [ -d "$dir" ] || continue
+              rel=${dir#"$part"}
+              [ -e "pages/$rel" ] && continue
+              mkdir -p "$(dirname "pages/$rel")"
+              cp -r "$dir" "pages/$rel"
+            done
+          done
+
+      - name: Build landing page
+        working-directory: site
+        run: |
+          rm -rf ../pages/assets
+          npm ci
+          export VERSIONS=$(ls ../pages | grep -E '^[0-9]' | sort -rV | paste -sd,)
+          SITE_OUT="$GITHUB_WORKSPACE/pages" npm run build
+
+      - name: Commit and push
+        run: |
+          cd pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "nothing to publish"; exit 0; fi
+          git commit -q -m "Publish ${GITHUB_SHA::7}"
+          git push origin gh-pages

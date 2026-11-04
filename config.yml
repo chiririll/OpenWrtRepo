@@ -1,0 +1,22 @@
+# Single source of truth for the repo.
+repo_name: razzmatazz                               # key file name and repositories.d entry
+base_url: https://openwrt.razzmatazz.ru             # no trailing slash; apk does not follow redirects. A non-github.io host also produces a CNAME file.
+openwrt_version: 25.12.1
+sdk_base: https://downloads.openwrt.org/releases
+
+packages:
+  - name: kmod-amneziawg
+    scope: target
+    description: AmneziaWG kernel module, built against the exact kernel of each target.
+  - name: amneziawg-tools
+    scope: arch
+    description: awg and awg-quick userspace tools.
+  - name: luci-proto-amneziawg
+    scope: arch
+    description: LuCI protocol support for AmneziaWG interfaces.
+  - name: zapret
+    scope: arch
+    description: DPI bypass tool (nfqws / tpws).
+  - name: luci-app-zapret
+    scope: arch
+    description: LuCI interface for zapret.

@@ -1,0 +1,7 @@
+name: Cudy WR3000S v1
+vendor: Cudy
+target: mediatek
+subtarget: filogic
+arch: aarch64_cortex-a53
+profile: cudy_wr3000s-v1
+extra_packages: []

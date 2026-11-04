@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{REPO_NAME}} — OpenWrt packages</title>
+  <meta name="description"
+    content="Signed apk package repository for OpenWrt: AmneziaWG, zapret and more, built for specific routers.">
+  <script type="module" src="./main.js"></script>
+</head>
+
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="logo">{{REPO_NAME}}<span>/</span>openwrt</div>
+      <div><a class="link" href="#install">Install</a><a class="link" href="#devices">Devices</a><a class="link"
+          href="#packages">Packages</a></div>
+    </nav>
+
+    <header class="hero">
+      <h1>Packages for your router,<br><em>built and signed for it.</em></h1>
+      <p>An apk repository for OpenWrt with AmneziaWG, zapret and more. Kernel modules are built against the exact
+        kernel of each supported device.</p>
+      <div class="chips">{{VERSIONS}}<span class="chip">apk · signed index</span><span class="chip">kept across
+          sysupgrade</span></div>
+    </header>
+
+    <section id="install">
+      <h2>Install</h2>
+      <p class="sub">Run on the router over SSH. Requires OpenWrt 25.12 or newer (apk).</p>
+      <div class="steps">
+        <div class="step">
+          <h3>Add the repository</h3>
+          <p>Downloads the signing key and adds the feed for your release, architecture and target. Both files are also
+            added to <code>/etc/sysupgrade.conf</code> so they survive a sysupgrade.</p>
+          <div class="term">
+            <pre id="c1">wget -qO- {{BASE_URL}}/install.sh | sh</pre><button data-copy="c1">Copy</button>
+          </div>
+          <details>
+            <summary>Prefer to do it by hand?</summary>
+            <div class="term" style="margin-top:10px">
+              <pre id="c2">. /etc/openwrt_release
+wget -qO /etc/apk/keys/{{REPO_NAME}}.pem {{BASE_URL}}/keys/{{REPO_NAME}}.pem
+cat &gt; /etc/apk/repositories.d/{{REPO_NAME}}.list &lt;&lt;EOF
+{{BASE_URL}}/$DISTRIB_RELEASE/packages/$DISTRIB_ARCH/packages.adb
+{{BASE_URL}}/$DISTRIB_RELEASE/targets/$DISTRIB_TARGET/packages/packages.adb
+EOF
+apk update</pre><button data-copy="c2">Copy</button>
+            </div>
+          </details>
+        </div>
+        <div class="step">
+          <h3>Install what you need</h3>
+          <div class="term">
+            <pre id="c3">apk add amneziawg-tools kmod-amneziawg luci-proto-amneziawg
+apk add zapret luci-app-zapret</pre><button data-copy="c3">Copy</button>
+          </div>
+        </div>
+        <div class="step">
+          <h3>Upgrade safely</h3>
+          <p>Kernel modules must match the running kernel, so after a sysupgrade run
+            <code>apk update &amp;&amp; apk upgrade</code>. Routers flashed with firmware from this project already have
+            the repository configured.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="devices">
+      <h2>Supported devices</h2>
+      <p class="sub">Every device runs the same pinned OpenWrt release ({{VERSION}}).</p>
+      <div class="grid">
+        {{DEVICES}}
+      </div>
+      <p class="note" style="margin-top:16px"><strong>Other device?</strong> Architecture-independent packages work on
+        any <code>aarch64_cortex-a53</code> router, but <code>kmod-*</code> packages only match the targets listed
+        above.</p>
+    </section>
+
+    <section id="packages">
+      <h2>Packages</h2>
+      <p class="sub">Scope tells you how a package is built: per kernel target or per CPU architecture.</p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Package</th>
+              <th>Scope</th>
+              <th>What it does</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{PACKAGES}}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Trust</h2>
+      <p class="note">The package index is signed with an EC key. The public key is at <a
+          href="{{BASE_URL}}/keys/{{REPO_NAME}}.pem">keys/{{REPO_NAME}}.pem</a>. Review <a
+          href="{{BASE_URL}}/install.sh">install.sh</a> before piping it to a shell.</p>
+    </section>
+
+    <footer>{{REPO_NAME}} OpenWrt repository · built with GitHub Actions</footer>
+  </div>
+</body>
+
+</html>
