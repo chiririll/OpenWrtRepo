@@ -1,9 +1,6 @@
 name: packages
 
 on:
-  push:
-    branches: [main]
-    paths-ignore: ["*.md"]
   workflow_dispatch:
 
 concurrency:
@@ -46,8 +43,25 @@ jobs:
           APK_SIGNING_KEY: ${{ secrets.APK_SIGNING_KEY }}
         run: sh scripts/ci/prepare-key.sh
 
+      - name: Cache SDK tarball
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/sdk-cache
+          key: sdk-${{ matrix.version }}-${{ matrix.target }}-${{ matrix.subtarget }}
+
       - name: Download SDK
+        env:
+          SDK_CACHE: ${{ runner.temp }}/sdk-cache
         run: sh scripts/ci/download-sdk.sh
+
+      # Source tarballs fetched by package Makefiles. Restored after the SDK is unpacked.
+      - name: Cache source downloads
+        uses: actions/cache@v4
+        with:
+          path: sdk/dl
+          key: dl-${{ matrix.version }}-${{ matrix.arch }}-${{ hashFiles('config.yml', 'feeds.yml') }}
+          restore-keys: |
+            dl-${{ matrix.version }}-${{ matrix.arch }}-
 
       - name: Set up feeds
         run: sh scripts/ci/setup-feeds.sh

@@ -5,6 +5,7 @@
   repo.py feeds-conf     `src-git` lines for enabled feeds (feeds.conf format)
   repo.py setup-scripts  setup scripts of enabled feeds, one per line
   repo.py kconfig        CONFIG_PACKAGE_<name>=m lines for packages of enabled feeds
+  repo.py packages       names of the packages of enabled feeds, space-separated
 """
 import pathlib
 import sys
@@ -38,6 +39,8 @@ def main(argv):
         for p in cfg["packages"]:
             if package_enabled(p):
                 print(f"CONFIG_PACKAGE_{p['name']}=m")
+    elif cmd == "packages":
+        print(" ".join(p["name"] for p in cfg["packages"] if package_enabled(p)))
     else:
         sys.exit(__doc__)
 
