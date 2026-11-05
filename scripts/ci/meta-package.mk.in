@@ -1,0 +1,25 @@
+# Throwaway SDK package that depends on every package this repo builds (see scripts/ci/build.sh).
+# @NAME@ and @DEPENDS@ are filled in by build.sh. It is built but never published.
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=@NAME@
+PKG_VERSION:=1
+PKG_RELEASE:=1
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/@NAME@
+  SECTION:=meta
+  CATEGORY:=Utilities
+  TITLE:=CI build target
+  DEPENDS:=@DEPENDS@
+endef
+
+define Build/Compile
+endef
+
+define Package/@NAME@/install
+	true
+endef
+
+$(eval $(call BuildPackage,@NAME@))
