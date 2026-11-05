@@ -1,7 +1,7 @@
 # Single source of truth for the repo.
 repo_name: razzmatazz                               # key file name and repositories.d entry
 base_url: https://openwrt.razzmatazz.ru             # no trailing slash; apk does not follow redirects. A non-github.io host also produces a CNAME file.
-openwrt_version: 25.12.1
+openwrt_version: 25.12.5
 sdk_base: https://downloads.openwrt.org/releases
 
 # feed: name from feeds.yml. Packages of a disabled feed are skipped.
