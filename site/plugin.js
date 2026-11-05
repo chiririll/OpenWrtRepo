@@ -35,8 +35,65 @@ const deviceCard = (d) => `<article class="card">
 const packageRow = (p) =>
   `<tr><td><code>${esc(p.name)}</code></td><td><span class="scope">${esc(p.scope)}</span></td><td>${esc(p.description)}</td></tr>`;
 
+// Built package versions: { "<openwrt>": { "<pkg>": { arch: {...}, target: {...} } } }.
+// Produced by scripts/ci/versions.py; absent in local dev, then cells show "–".
+function loadBuilt() {
+  try {
+    return JSON.parse(fs.readFileSync(process.env.VERSIONS_JSON, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+const dash = '<span class="muted">–</span>';
+
+function builtVersion(built, ver, pkg, d) {
+  const e = built[ver]?.[pkg.name];
+  const v = pkg.scope === "arch" ? e?.arch?.[d.arch] : e?.target?.[`${d.target}/${d.subtarget}`];
+  return v;
+}
+
+// Table 1: packages x OpenWrt versions. Target-scoped packages can differ per target, so list all distinct values.
+function versionMatrix(cfg, devices, versions, built) {
+  const cell = (pkg, ver) => {
+    const vals = [...new Set(devices.map((d) => builtVersion(built, ver, pkg, d)).filter(Boolean))];
+    return vals.length ? vals.map((v) => `<code>${esc(v)}</code>`).join("<br>") : dash;
+  };
+  const head = versions.map((v) => `<th>${esc(v)}</th>`).join("");
+  const rows = cfg.packages
+    .map((p) => `<tr><td><code>${esc(p.name)}</code></td>${versions.map((v) => `<td>${cell(p, v)}</td>`).join("")}</tr>`)
+    .join("\n");
+  return `<table><thead><tr><th>Package</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// Table 3: devices x packages, one table per OpenWrt version (switched by a <select>).
+function deviceMatrix(cfg, devices, versions, built) {
+  const select = `<label class="vsel">OpenWrt <select id="dm-select">${versions
+    .map((v) => `<option value="${esc(v)}">${esc(v)}</option>`)
+    .join("")}</select></label>`;
+  const tables = versions
+    .map((ver, i) => {
+      const head = cfg.packages.map((p) => `<th>${esc(p.name)}</th>`).join("");
+      const rows = devices
+        .map((d) => {
+          const cells = cfg.packages
+            .map((p) => {
+              const v = builtVersion(built, ver, p, d);
+              return `<td>${v ? `<code>${esc(v)}</code>` : dash}</td>`;
+            })
+            .join("");
+          return `<tr><td>${esc(d.name)}<div class="muted small">${esc(d.arch)}</div></td>${cells}</tr>`;
+        })
+        .join("\n");
+      return `<div class="tablewrap dm" data-version="${esc(ver)}"${i ? " hidden" : ""}><table><thead><tr><th>Device</th>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+    })
+    .join("\n");
+  return select + "\n" + tables;
+}
+
 export default function repoData() {
   const { cfg, devices, baseUrl, versions } = load();
+  const built = loadBuilt();
   const vars = {
     REPO_NAME: cfg.repo_name,
     BASE_URL: baseUrl,
@@ -44,6 +101,8 @@ export default function repoData() {
     VERSIONS: versions.map((v) => `<span class="chip">OpenWrt ${esc(v)}</span>`).join(""),
     DEVICES: devices.map(deviceCard).join("\n"),
     PACKAGES: cfg.packages.map(packageRow).join("\n"),
+    VERSION_MATRIX: versionMatrix(cfg, devices, versions, built),
+    DEVICE_MATRIX: deviceMatrix(cfg, devices, versions, built),
   };
   const fill = (text) => text.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in vars ? vars[k] : m));
 

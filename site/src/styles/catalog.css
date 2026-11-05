@@ -92,3 +92,31 @@ td code {
   border: 1px solid var(--line);
   color: var(--muted);
 }
+
+.muted {
+  color: var(--muted);
+}
+
+.small {
+  font-size: 12px;
+}
+
+.vsel {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.vsel select {
+  background: var(--card);
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font: inherit;
+}
+
+.dm[hidden] {
+  display: none;
+}

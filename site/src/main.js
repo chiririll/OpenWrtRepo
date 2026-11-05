@@ -15,3 +15,10 @@ document.querySelectorAll("[data-copy]").forEach((btn) => {
     setTimeout(() => (btn.textContent = "Copy"), 1500);
   });
 });
+
+const sel = document.getElementById("dm-select");
+if (sel) {
+  sel.addEventListener("change", () => {
+    document.querySelectorAll(".dm").forEach((el) => (el.hidden = el.dataset.version !== sel.value));
+  });
+}
