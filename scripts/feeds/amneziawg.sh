@@ -30,10 +30,15 @@ ls "$linux_dir/drivers/net/wireguard/"*.c >/dev/null
 
 # The module defines wg_get_random_u32_inclusive() in send.c without a prototype, and the
 # kernel build treats -Wmissing-prototypes as an error. Downgrade it to a warning.
+# Older feed revisions vendored the module sources in kmod-amneziawg/src; newer ones (awg 3.x)
+# fetch them at build time, so there is nothing to patch in the feed then.
 mk="$sdk/feeds/amneziawg/kmod-amneziawg/src/Makefile"
-[ -f "$mk" ] || { echo "feed Makefile not found: $mk" >&2; exit 1; }
-grep -q 'Wno-error=missing-prototypes' "$mk" || \
-  echo 'ccflags-y += -Wno-error=missing-prototypes' >> "$mk"
+if [ -f "$mk" ]; then
+  grep -q 'Wno-error=missing-prototypes' "$mk" || \
+    echo 'ccflags-y += -Wno-error=missing-prototypes' >> "$mk"
+else
+  echo "no kmod-amneziawg/src/Makefile in the feed: skipping the missing-prototypes patch"
+fi
 
 # luci-proto-amneziawg sets PKG_VERSION:=0.0.1-1; luci.mk appends -r<release>, and apk rejects
 # the resulting "0.0.1-1-r1" as an invalid version. Drop the "-1" (the release is added anyway).

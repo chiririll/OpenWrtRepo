@@ -9,7 +9,7 @@
 feeds:
   - name: amneziawg
     enabled: true
-    git: https://github.com/amnezia-vpn/amneziawg-openwrt.git
+    git: https://github.com/Slava-Shchipunov/awg-openwrt.git
     setup: scripts/feeds/amneziawg.sh
 
   - name: zapret
