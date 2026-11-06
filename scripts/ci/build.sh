@@ -6,6 +6,11 @@ meta=razzmatazz-build
 
 cd sdk
 
+# download.pl tries the mirrors of a source in order, but curl waits on a stalled one forever.
+# Give up on a connection slower than 50 KB/s for 20 s (no same-mirror retries) so the next
+# mirror is tried. Override with CURL_OPTIONS in the environment.
+export CURL_OPTIONS="${CURL_OPTIONS:---speed-limit 51200 --speed-time 20 --retry 0}"
+
 # `make package/a/compile package/b/compile` runs every goal as its own sub-make, so shared
 # dependencies (toolchain, linux-firmware, package/kernel/linux) are rebuilt once per goal.
 # A throwaway package that depends on all of ours gives make a single goal instead.
