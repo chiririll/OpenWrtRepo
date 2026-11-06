@@ -25,5 +25,32 @@
         "aarch64_cortex-a53": "72.20260307-r1"
       }
     }
+  },
+  "25.12.5": {
+    "amneziawg-tools": {
+      "arch": {
+        "aarch64_cortex-a53": "3.1.20260812-r1"
+      }
+    },
+    "kmod-amneziawg": {
+      "target": {
+        "mediatek/filogic": "6.12.94.3.1.20260906-r1"
+      }
+    },
+    "luci-app-zapret": {
+      "arch": {
+        "aarch64_cortex-a53": "72.20260307-r1"
+      }
+    },
+    "luci-proto-amneziawg": {
+      "arch": {
+        "aarch64_cortex-a53": "3.1.0-r1"
+      }
+    },
+    "zapret": {
+      "arch": {
+        "aarch64_cortex-a53": "72.20260307-r1"
+      }
+    }
   }
 }
