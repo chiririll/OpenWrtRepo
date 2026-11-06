@@ -22,6 +22,6 @@ else
   (cd "$cache" && echo "$sum" | sha256sum -c -)
 fi
 
-mkdir sdk
+mkdir -p sdk
 tar -xf "$cache/$file" -C sdk --strip-components=1
 [ -n "${SDK_CACHE:-}" ] || rm -f "$file"

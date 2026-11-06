@@ -1,14 +1,18 @@
 #!/bin/sh
 # Check out gh-pages into ./pages (or start it) and replace only the versions built in this run.
 # Expects build artifacts in ./parts/<artifact>/ (each: public.pem and <version>/...).
-# Env: PAGES_URL (push URL incl. credentials)
+# Env: PAGES_URL (push URL incl. credentials). Not needed when ./pages already exists
+# (local runs seed it with the previous gh-pages content, or leave it empty for a fresh start).
 set -eu
-: "${PAGES_URL:?}"
 
-if ! git clone -q --depth 1 -b gh-pages "$PAGES_URL" pages 2>/dev/null; then
-  git init -q -b gh-pages pages
-  git -C pages remote add origin "$PAGES_URL"
+if [ ! -d pages ]; then
+  : "${PAGES_URL:?}"
+  if ! git clone -q --depth 1 -b gh-pages "$PAGES_URL" pages 2>/dev/null; then
+    git init -q -b gh-pages pages
+    git -C pages remote add origin "$PAGES_URL"
+  fi
 fi
+touch pages/.nojekyll
 
 name=$(python3 scripts/ci/repo.py get repo_name)
 mkdir -p pages/keys

@@ -25,6 +25,17 @@ gh secret set APK_SIGNING_KEY < ~/.secrets/razzmatazz-apk.priv.pem
 cd site && npm install && npm run dev   # live preview with hot reload
 ```
 
+## Run the workflow locally (Docker)
+
+Builds, signs and commits to the **local** `gh-pages` branch. Never pushes. Works with a remote Docker context.
+
+```sh
+APK_SIGNING_KEY_FILE=~/.secrets/razzmatazz-apk.priv.pem scripts/local/run.sh [--fresh]
+git push --force-with-lease origin gh-pages   # publish manually
+```
+
+`--fresh` recreates `gh-pages` as a single commit with only the pinned version. The key must match the one already published in `keys/`.
+
 ## Add a device
 
 Create `devices/<name>.yml` (see existing ones). New target/subtarget combos get their own SDK build automatically.

@@ -102,14 +102,7 @@ jobs:
         run: sh scripts/ci/pages-prepare.sh
 
       - name: Build landing page
-        working-directory: site
-        run: |
-          python3 ../scripts/ci/versions.py ../pages
-          export VERSIONS_JSON="$GITHUB_WORKSPACE/pages/versions.json"
-          rm -rf ../pages/assets
-          npm ci
-          export VERSIONS=$(ls ../pages | grep -E '^[0-9]' | sort -rV | paste -sd,)
-          SITE_OUT="$GITHUB_WORKSPACE/pages" npm run build
+        run: sh scripts/ci/site-build.sh
 
       - name: Commit and push
         run: sh scripts/ci/pages-push.sh
